@@ -1,0 +1,12 @@
+{
+  "k": 10,
+  "evaluated_profiles": 500,
+  "precision_at_k": 0.9888,
+  "hit_rate_at_k": 1.0,
+  "map_at_k": 0.9924,
+  "ndcg_at_k": 0.9958,
+  "mean_skill_jaccard": 0.9939,
+  "baseline_random_precision_at_k": 0.1204,
+  "baseline_random_skill_jaccard": 0.0669,
+  "lift_over_random": 8.21
+}
