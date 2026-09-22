@@ -47,58 +47,7 @@ by `job_id`) and a raw scored table you can expand for the underlying numbers.
 The model must be trained first (`python main.py train` / `bash run.sh` does
 this); the page tells you if `models/job_recommender.joblib` is missing.
 
-## Usage
 
-```bash
-# retrain and re-export
-python main.py train
-
-# recommendations for a candidate profile
-python main.py recommend \
-  --skills "Python, SQL, Machine Learning" \
-  --title "Data Scientist" \
-  --location Bangalore \
-  --experience "Mid Level" \
-  --industry Software \
-  --expected-salary 120000 \
-  --top-k 10
-
-# hard constraints (applied after scoring) and JSON output
-python main.py recommend --skills "Nursing, Patient Care" \
-  --filter-location London --min-salary 90000 --json
-
-# "more jobs like this one"
-python main.py recommend --similar-to 42
-
-# REST API on http://127.0.0.1:8000
-python main.py serve
-```
-
-API:
-
-```bash
-curl -X POST localhost:8000/recommend -H 'Content-Type: application/json' -d '{
-  "skills": ["Python", "SQL"],
-  "location": "Bangalore",
-  "experience_level": "Mid Level",
-  "top_k": 5,
-  "filters": {"location": "Bangalore", "min_salary": 100000}
-}'
-
-curl localhost:8000/similar/42?top_k=5
-curl localhost:8000/meta      # valid locations, industries, skills
-curl localhost:8000/health
-```
-
-Use in your own Python code:
-
-```python
-from src.model import JobRecommender
-
-model = JobRecommender.load()
-recs = model.recommend({"skills": ["SEO", "Content Writing"], "location": "London"}, top_k=5)
-print(recs)
-```
 
 ## How it works
 
@@ -146,59 +95,3 @@ On real postings expect materially lower scores, and swap this module for
 log-based evaluation (CTR, application rate, A/B tests) once interaction data
 exists.
 
-## Project structure
-
-```
-job-recommender/
-├── main.py                  # single entrypoint: train | recommend | serve | demo
-├── app.py                   # Streamlit web UI (python app.py or streamlit run app.py)
-├── run.sh                   # one-command setup + train + demo
-├── Makefile                 # make train / demo / serve / test
-├── requirements.txt
-├── data/
-│   └── job_recommendation_dataset.csv
-├── models/                  # generated artefacts (gitignored)
-├── src/
-│   ├── config.py            # paths, column names, feature weights
-│   ├── data.py              # loading, cleaning, deduplication
-│   ├── features.py          # vectorizers for jobs and profiles
-│   ├── model.py             # JobRecommender: fit / recommend / similar / save / load
-│   ├── evaluate.py          # held-out proxy metrics vs random baseline
-│   ├── train.py             # training pipeline + export
-│   ├── recommend.py         # CLI inference
-│   └── api.py               # Flask REST API
-└── tests/
-    └── test_pipeline.py     # pytest smoke tests
-```
-
-## Tests
-
-```bash
-pip install pytest
-python -m pytest -q
-```
-
-## Push to git
-
-```bash
-cd job-recommender
-git init
-git add .
-git commit -m "Content-based job recommendation system"
-git branch -M main
-git remote add origin https://github.com/<you>/job-recommender.git
-git push -u origin main
-```
-
-`.gitignore` excludes `models/*.joblib` — the artefact is ~2.5 MB and anyone who
-clones the repo regenerates it in seconds with `python main.py train`. If you
-want the trained model in the repo, delete that line from `.gitignore` (or track
-it with Git LFS).
-
-## Possible next steps
-
-- Collaborative filtering or a two-tower model once application logs exist.
-- Sentence embeddings for job titles so that related titles match without exact
-  word overlap.
-- Diversity re-ranking (MMR) so one company doesn't fill the whole list.
-- FAISS or ScaNN instead of brute-force search beyond a few million postings.
